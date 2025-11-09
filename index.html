@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Voice Room - Animated Style</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap" rel="stylesheet">
+    <script src="https://download.agora.io/sdk/release/AgoraRTC_N.js"></script>
+    
+    <style>
+        /* ------------------------------------- */
+        /* أساسيات الصفحة والحركة العامة */
+        /* ------------------------------------- */
+        body { 
+            margin: 0; 
+            padding: 0;
+            overflow: hidden; 
+            font-family: 'Cairo', sans-serif;
+            text-align: center;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            color: white;
+            position: relative;
+        }
+
+        /* تأثير الأورورا المتحرك (الخلفية) */
+        @keyframes aurora-animate {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        .background-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            /* خلفية متدرجة متحركة */
+            background: linear-gradient(-45deg, #0f4c75, #1a3c40, #0c2b3e, #0e2735);
+            background-size: 400% 400%;
+            animation: aurora-animate 20s ease infinite; /* تطبيق الحركة */
+            z-index: -2;
+        }
+        
+        /* ------------------------------------- */
+        /* المقاعد وتأثير النبض (Pulsing Effect) */
+        /* ------------------------------------- */
+
+        /* حركة النبض للمتحدثين */
+        @keyframes pulse-ring {
+            0% { transform: scale(0.3); opacity: 0.7; }
+            100% { transform: scale(1.5); opacity: 0; }
+        }
+
+        .seat-grid-container {
+            flex-grow: 1;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            padding-top: 30px;
+            overflow-y: auto;
+        }
+        .seat-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 20px 10px; /* زيادة التباعد الرأسي */
+            max-width: 95%;
+        }
+        .seat {
+            position: relative;
+            width: 70px; /* حجم أكبر قليلاً */
+            height: 70px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            transition: transform 0.3s;
+        }
+        .seat:hover {
+            transform: scale(1.05);
+        }
+
+        /* رمز المايك الأنيق (بدل الكرسي) */
+        .seat-icon {
+            width: 60px;
+            height: 60px;
+            background-color: rgba(255, 255, 255, 0.1); /* لون شبه شفاف */
+            border: 2px solid gold; 
+            border-radius: 50%;
+            position: relative;
+            box-shadow: 0 0 10px rgba(255, 215, 0, 0.3); /* ظل خفيف */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden; /* لمنع النبض من الخروج عن الحدود */
+        }
+
+        .seat-icon::before {
+            content: '🎙️'; /* رمز مايكروفون جديد */
+            font-size: 2.2em;
+            position: absolute;
+            z-index: 2;
+            transition: all 0.3s;
+        }
+        
+        /* حالة المقعد المشغول/المتحدث (Holo Effect) */
+        .seat.occupied .seat-icon {
+            border-color: #2ecc71; /* لون أخضر حيوي */
+            box-shadow: 0 0 15px #2ecc71, 0 0 5px #27ae60; /* تأثير هالة خضراء */
+        }
+        .seat.occupied .seat-icon::before {
+            content: '🔊'; /* رمز صوت */
+            filter: drop-shadow(0 0 3px white);
+        }
+        
+        /* تأثير النبض للمتحدث */
+        .seat.occupied::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            border: 2px solid #2ecc71;
+            z-index: 1;
+            animation: pulse-ring 1.5s infinite; /* تطبيق النبض */
+        }
+
+        /* تصميم الأرقام */
+        .seat-number {
+            position: absolute;
+            bottom: -5px; 
+            font-size: 0.8em;
+            color: #f1c40f; /* لون أصفر واضح */
+            font-weight: bold;
+            padding: 2px 5px;
+            background: #34495e; /* خلفية داكنة للوضوح */
+            border-radius: 5px;
+            z-index: 3;
+        }
+
+        /* ------------------------------------- */
+        /* شريط الرأس وعناصر التحكم (أكثر حدة) */
+        /* ------------------------------------- */
+        .header-bar {
+            /* نفس التصميم السابق مع تعديلات طفيفة */
+            background: rgba(0, 0, 0, 0.6);
+        }
+        .go-btn {
+            background-color: #e74c3c; /* لون أحمر/برتقالي بارز */
+            padding: 5px 15px;
+            border-radius: 25px;
+            box-shadow: 0 0 10px #e74c3c;
+        }
+
+        /* شريط التحكم السفلي */
+        .footer-controls {
+            background: rgba(0, 0, 0, 0.7);
+            border-top: 1px solid #34495e;
+        }
+        .control-btn {
+            background-color: rgba(255, 255, 255, 0.2);
+            box-shadow: 0 0 8px rgba(255, 255, 255, 0.1);
+            transition: background-color 0.2s;
+        }
+        .control-btn:active {
+            transform: scale(0.95);
+        }
+
+        /* أزرار الانضمام والمغادرة الجديدة */
+        #join-btn { background-color: #2ecc71 !important; } /* أخضر للانضمام */
+        #leave-btn { background-color: #e74c3c !important; } /* أحمر للمغادرة */
+
+        /* سجل الحالة (LOG) */
+        #log {
+            top: 75px;
+            background: rgba(44, 62, 80, 0.8);
+            border: 1px solid #3498db;
+        }
+    </style>
+</head>
+<body>
+    <div class="background-container"></div>
+    
+    <div class="header-bar">
+        <div class="header-left">
+            <div class="go-btn">Go ></div>
+            <div class="room-info">NON WIN <span id="win-amount">120000</span> in Wild Party</div>
+        </div>
+        <div class="header-right">
+            <span>🇰🇸Ã</span>
+            <span id="user-id-display">563442360</span>
+            <div style="width: 20px; height: 20px; background-color: gold; border-radius: 50%; margin-left: 5px;"></div>
+        </div>
+    </div>
+    
+    <div class="seat-grid-container">
+        <div class="seat-grid" id="remote-users-container">
+            </div>
+    </div>
+    
+    <div class="chat-announcement-area">
+        <div class="announcement-box" style="text-align: left;"><p><span style="color: red; font-weight: bold;">هـنــيــئـاً لــك:</span> <span class="announcement-highlight">...K$Ã</span> <span style="color: #2ecc71;">تم الدخول إلى الغرفة</span></p></div>
+        <div class="announcement-box"><p style="color: #e74c3c; font-weight: bold;">بالإباحية أو العنف أو الممنوع!</p></div>
+    </div>
+
+    <div class="footer-controls">
+        <div style="display: flex;">
+            <div style="width: 50px; height: 50px; border-radius: 10px; background: #3498db; margin-right: 10px; box-shadow: 0 0 10px #3498db;">
+            </div>
+            <button id="join-btn" class="control-btn">JOIN</button>
+            <button id="leave-btn" class="control-btn" disabled style="display: none;">LEAVE</button>
+        </div>
+        <div style="display: flex;">
+            <div class="control-btn">💬</div>
+            <div class="control-btn">🎁</div>
+            <div class="control-btn">🎮</div>
+        </div>
+    </div>
+
+    <div id="log">Status: Ready.</div>
+
+    <script>
+        // **********************************************
+        // كود AGORA RTC (لم يتغير)
+        // **********************************************
+        const APP_ID = '7256e10dce5849638ed0480404c0e815'; 
+        const CHANNEL_NAME = 'main_room';
+        const TOKEN = null;
+        const MAX_SEATS = 20;
+
+        let client = null;
+        let localAudioTrack = null;
+        const remoteUsers = {}; 
+
+        // -------------------------------------
+        // وظائف واجهة المستخدم (DOM)
+        // -------------------------------------
+
+        function buildSeats() {
+            const container = document.getElementById('remote-users-container');
+            for (let i = 1; i <= MAX_SEATS; i++) {
+                const seat = document.createElement('div');
+                seat.className = 'seat';
+                seat.id = `seat-${i}`;
+                seat.setAttribute('data-uid', '');
+                
+                const icon = document.createElement('div');
+                icon.className = 'seat-icon';
+                seat.appendChild(icon);
+
+                const number = document.createElement('div');
+                number.className = 'seat-number';
+                number.innerText = i;
+                seat.appendChild(number);
+
+                container.appendChild(seat);
+            }
+        }
+
+        function findAndOccupySeat(uid) {
+            for (let i = 1; i <= MAX_SEATS; i++) {
+                const seat = document.getElementById(`seat-${i}`);
+                if (!seat.getAttribute('data-uid')) {
+                    seat.setAttribute('data-uid', uid);
+                    seat.classList.add('occupied');
+                    return seat;
+                }
+            }
+            return null;
+        }
+
+        function freeSeat(uid) {
+            const seat = document.querySelector(`.seat[data-uid="${uid}"]`);
+            if (seat) {
+                seat.setAttribute('data-uid', '');
+                seat.classList.remove('occupied');
+                seat.classList.remove('local-user');
+            }
+        }
+
+
+        // -------------------------------------
+        // وظائف AGORA
+        // -------------------------------------
+
+        function initializeClient() {
+            client = AgoraRTC.createClient({ mode: "rtc", codec: "vp8" });
+            setupEventListeners();
+        }
+
+        function setupEventListeners() {
+            client.on("user-published", async (user, mediaType) => {
+                await client.subscribe(user, mediaType);
+                if (mediaType === "audio") {
+                    user.audioTrack.play();
+                    remoteUsers[user.uid] = user;
+                    findAndOccupySeat(user.uid);
+                    document.getElementById('log').innerText = `Status: User ${user.uid} joined and is talking.`;
+                }
+            });
+
+            client.on("user-unpublished", (user) => {
+                delete remoteUsers[user.uid];
+                freeSeat(user.uid);
+                document.getElementById('log').innerText = `Status: User ${user.uid} left.`;
+            });
+        }
+
+        async function joinChannel() {
+            if (!client) initializeClient();
+            document.getElementById('log').innerText = `Status: Attempting to join...`;
+            
+            document.getElementById('join-btn').style.display = 'none';
+            document.getElementById('leave-btn').style.display = 'flex';
+            document.getElementById('leave-btn').disabled = true;
+
+            try {
+                const uid = await client.join(APP_ID, CHANNEL_NAME, TOKEN, null);
+                localAudioTrack = await AgoraRTC.createMicrophoneAudioTrack();
+                await client.publish([localAudioTrack]);
+                
+                const localSeat = findAndOccupySeat(uid);
+                if(localSeat) {
+                    localSeat.classList.add('local-user');
+                    document.getElementById('user-id-display').innerText = uid;
+                }
+
+                document.getElementById('log').innerText = `Status: Joined channel with UID ${uid}.`;
+                document.getElementById('leave-btn').disabled = false;
+            } catch (error) {
+                console.error(error);
+                document.getElementById('log').innerText = `Status: ERROR joining call. Check logs.`;
+                document.getElementById('join-btn').style.display = 'flex';
+                document.getElementById('leave-btn').style.display = 'none';
+            }
+        }
+
+        async function leaveChannel() {
+            if (localAudioTrack) {
+                localAudioTrack.close();
+                localAudioTrack = null;
+            }
+            if (client) {
+                await client.leave();
+                const localUid = client._uid; 
+                if (localUid) freeSeat(localUid);
+                
+                document.getElementById('log').innerText = `Status: Left channel.`;
+                document.getElementById('join-btn').style.display = 'flex';
+                document.getElementById('leave-btn').style.display = 'none';
+            }
+        }
+
+        // -------------------------------------
+        // تهيئة الصفحة
+        // -------------------------------------
+        document.getElementById('join-btn').onclick = joinChannel;
+        document.getElementById('leave-btn').onclick = leaveChannel;
+        
+        buildSeats();
+        initializeClient(); 
+    </script>
+</body>
+</html>
